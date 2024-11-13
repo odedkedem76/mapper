@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Closest Location</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .error {
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script>
+       
+        function parseDMSCoordinates(locationString) {
+            console.log(locationString);
+
+            // Regular expression to match the DMS format
+            const regex = /(\d+)°(\d+)'(\d+\.\d+)"([NS])\s*(\d+)°(\d+)'(\d+\.\d+)"([EW])/;
+            
+            // Extract components using regex
+            const matches = locationString.match(regex);
+            if (!matches) {
+                
+                throw new Error('Invalid coordinate format');
+            }
+            
+            // Parse latitude components
+            const latDeg = parseInt(matches[1], 10);
+            const latMin = parseInt(matches[2], 10);
+            const latSec = parseFloat(matches[3]);
+            const latDir = matches[4];
+            
+            // Parse longitude components
+            const lngDeg = parseInt(matches[5], 10);
+            const lngMin = parseInt(matches[6], 10);
+            const lngSec = parseFloat(matches[7]);
+            const lngDir = matches[8];
+            
+            // Convert to decimal degrees
+            let lat = latDeg + (latMin / 60) + (latSec / 3600);
+            let lng = lngDeg + (lngMin / 60) + (lngSec / 3600);
+            
+            // Apply direction (make negative for South or West)
+            if (latDir === 'S') lat = -lat;
+            if (lngDir === 'W') lng = -lng;
+            
+            // Round to 4 decimal places
+            return {
+                lat: Number(lat.toFixed(4)),
+                lng: Number(lng.toFixed(4))
+            };
+        }
+
+        function getLocations() {
+            const locations = JSON.parse(localStorage.getItem('locations'));
+            if (locations === null) {
+                return [
+                    { title: "Eiffel Tower", location: { lat: 48.8584, lng: 2.2945 } },
+                    { title: "Statue of Liberty", location: { lat: 40.6892, lng: -74.0445 } },
+                    { title: "Sydney Opera House", location: { lat: -33.8568, lng: 151.2153 } },
+                    { title: "Taj Mahal", location: { lat: 27.1751, lng: 78.0421 } },
+                    { title: "Colosseum", location: { lat: 41.8902, lng: 12.4922 } }
+                ];
+            }
+            return locations;
+        }
+
+        function loadTable(){
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv';
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const csvData = e.target.result;
+                    // Papa is now globally available, no require needed
+                    const data = Papa.parse(csvData, { header: true });
+                    const locations = data.data.map(row => {
+                        return {
+                            title: row.title,
+                            location: parseDMSCoordinates(row.geolocation)
+                        };
+                    });
+                    console.log(locations);
+                    localStorage.setItem('locations', JSON.stringify(locations));
+                };
+                reader.readAsText(file);
+            });
+            input.click();
+        }
+
+    </script>
+    <h1>Closest Location Finder</h1>
+    <div id="status">Checking your location...</div>
+    
+    <div id="result" class="result" style="display: none;">
+        Closest location: <span id="closest"></span>
+    </div>
+    <button id="load" onclick="loadTable()">Load</button>
+    <button id="show" onclick="showLocations()">Show</button>
+
+    <script>
+
+        
+
+        function showLocations() {
+            // Remove existing popup if any
+            const existingPopup = document.querySelector('.popup');
+            if (existingPopup) {
+                document.body.removeChild(existingPopup);
+            }
+
+            const popup = document.createElement('div');
+            popup.className = 'popup';
+            popup.innerHTML = `
+                <h2>Locations</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                        </tr>
+                    </thead>
+                    <tbody id="locations">
+                    </tbody>
+                </table>
+            `;
+            document.body.appendChild(popup);
+
+            const locations = document.getElementById('locations');
+            getLocations().forEach(location => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${location.title}</td>
+                    <td>${location.location.lat}</td>
+                    <td>${location.location.lng}</td>
+                `;
+                locations.appendChild(row);
+            });
+        }
+    </script>
+
+    <script>
+
+        
+
+        
+
+        // Calculate distance between two points using the Haversine formula
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Find closest location
+        function findClosestLocation(userLat, userLng) {
+            let closestDistance = Infinity;
+            let closestLocation = null;
+
+            getLocations().forEach(loc => {
+                const distance = calculateDistance(
+                    userLat, 
+                    userLng, 
+                    loc.location.lat, 
+                    loc.location.lng
+                );
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestLocation = loc;
+                }
+            });
+
+            return closestLocation;
+        }
+
+        // Get user's location and find closest place
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    
+                    const closest = findClosestLocation(userLat, userLng);
+                    
+                    document.getElementById('status').style.display = 'none';
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('closest').textContent = closest.title;
+                },
+                function(error) {
+                    document.getElementById('status').innerHTML = 
+                        `<div class="error">Error getting location: ${error.message}</div>`;
+                }
+            );
+        } else {
+            document.getElementById('status').innerHTML = 
+                '<div class="error">Geolocation is not supported by your browser</div>';
+        }
+    </script>
+</body>
+</html>
