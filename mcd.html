@@ -23,18 +23,17 @@
             margin-top: 20px;
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
 </head>
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="mcd.js"></script>
     
-    <h1>Closest Location Finder</h1>
+    <h1>בניינים קרובים אלי</h1>
     <div id="status">Checking your location...</div>
     
-    
-    <button id="load" onclick="loadTable()">Load</button>
-    <button id="show" onclick="showLocations()">Show</button>
-    <button id="refresh" onclick="fillTable()">Refresh</button>
+    <i class="fa fa-refresh" style="font-size:36px;" onclick="fillTable()"></i>
     <div id="restablediv">
         <table id="restable" style="border: 1px solid #ccc; border-collapse: collapse; width: 100%">
             <thead>
@@ -47,8 +46,9 @@
             <tbody id="restablebody">
             </tbody>
         </table>
-
     </div>
+    <button id="load" onclick="loadTable()">Load</button>
+    <button id="show" onclick="showLocations()">Show</button>
 
     <script>
         fillTable();
