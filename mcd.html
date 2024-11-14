@@ -31,9 +31,7 @@
     <h1>Closest Location Finder</h1>
     <div id="status">Checking your location...</div>
     
-    <div id="result" class="result" style="display: none;">
-        Closest location: <span id="closest"></span>
-    </div>
+    
     <button id="load" onclick="loadTable()">Load</button>
     <button id="show" onclick="showLocations()">Show</button>
     <button id="refresh" onclick="fillTable()">Refresh</button>
@@ -53,28 +51,8 @@
     </div>
 
     <script>
-        // Get user's location and find closest place
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        const userLat = position.coords.latitude;
-                        const userLng = position.coords.longitude;
-                        
-                        const closest = findClosestLocation(userLat, userLng);
-                        
-                        document.getElementById('status').style.display = 'none';
-                        document.getElementById('result').style.display = 'block';
-                        document.getElementById('closest').textContent = closest.title;
-                    },
-                    function(error) {
-                        document.getElementById('status').innerHTML = 
-                            `<div class="error">Error getting location: ${error.message}</div>`;
-                    }
-                );
-            } else {
-                document.getElementById('status').innerHTML = 
-                    '<div class="error">Geolocation is not supported by your browser</div>';
-            }    
+        fillTable();
+        
         
 
        

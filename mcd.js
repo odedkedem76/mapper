@@ -50,7 +50,8 @@ function loadTable(){
             const locations = data.data.map(row => {
                 return {
                     title: row.title,
-                    location: parseCoordinates(row.geolocation)
+                    location: parseCoordinates(row.geolocation),
+                    code: row.code
                 };
             });
             console.log(locations);
@@ -78,6 +79,7 @@ function showLocations() {
                     <th>Title</th>
                     <th>Latitude</th>
                     <th>Longitude</th>
+                    <th>code</th>
                 </tr>
             </thead>
             <tbody id="locations">
@@ -93,6 +95,7 @@ function showLocations() {
             <td>${location.title}</td>
             <td>${location.location.lat}</td>
             <td>${location.location.lng}</td>
+            <td>${location.code}</td>
         `;
         locations.appendChild(row);
     });
@@ -100,7 +103,7 @@ function showLocations() {
 
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth's radius in km
+    const R = 6371 * 1000; // Earth's radius in meters
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = 
@@ -131,18 +134,28 @@ function findClosestLocation(userLat, userLng) {
     return closestLocation;
 }
 
-function fillResTableWithData(dataList){
+function toMeterString(meters) {
+    return `${Math.round(meters)}m`;
+
+}
+
+function clearTableBody(){
     const resTableBody = document.getElementById('restablebody');
     // clear existing rows
     while (resTableBody.firstChild) {
         resTableBody.removeChild(resTableBody.firstChild);
     }
+}
+
+function fillResTableWithData(dataList){
+    const resTableBody = document.getElementById('restablebody');
+    clearTableBody();
 
     // create new rows
     dataList.forEach(data => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td style="border: 1px solid #ccc; padding: 8px;">${data.distance}</td>
+            <td style="border: 1px solid #ccc; padding: 8px;">${toMeterString(data.distance)}</td>
             <td style="border: 1px solid #ccc; padding: 8px;">${data.title}</td>
             <td style="border: 1px solid #ccc; padding: 8px;">${data.code}</td>
         `;
@@ -150,12 +163,45 @@ function fillResTableWithData(dataList){
     });
 }
 
-function fillTable(){
-    const sampleList = [
-        {distance: 0.5, title: 'Test1', code: '123'},
-        {distance: 1.5, title: 'Test2', code: '456'},
-        {distance: 2.5, title: 'Test3', code: '789'},
-    ];
-    fillResTableWithData(sampleList);
+function fillTableImpl(userLat, userLng){
 
+    locs = getLocations();
+
+    const dataList = locs.map(loc => {
+        const distance = calculateDistance(
+            userLat, 
+            userLng, 
+            loc.location.lat, 
+            loc.location.lng
+        );
+        return {distance, title: loc.title, code: loc.code};
+    });
+
+    dataListSorted = dataList.sort((a, b) => a.distance - b.distance);
+    fillResTableWithData(dataList);
+}
+
+function fillTable(){
+    console.log('fillTable');
+    document.getElementById('status').style.display = 'block';
+    clearTableBody();
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+                
+                fillTableImpl(userLat, userLng);
+                document.getElementById('status').style.display = 'none';
+            },
+            function(error) {
+                document.getElementById('status').innerHTML = 
+                    `<div class="error">Error getting location: ${error.message}</div>`;
+            }
+        );
+    } else {
+        document.getElementById('status').innerHTML = 
+            '<div class="error">Geolocation is not supported by your browser</div>';
+    }    
+    
 }
