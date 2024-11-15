@@ -17,7 +17,6 @@ function parseCoordinates(locationString) {
     // Parse longitude
     const lng = parseFloat(matches[3]);
     
-    // Round to 4 decimal places
     return {
         lat: Number(lat),
         lng: Number(lng)
@@ -114,25 +113,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-function findClosestLocation(userLat, userLng) {
-    let closestDistance = Infinity;
-    let closestLocation = null;
 
-    getLocations().forEach(loc => {
-        const distance = calculateDistance(
-            userLat, 
-            userLng, 
-            loc.location.lat, 
-            loc.location.lng
-        );
-        if (distance < closestDistance) {
-            closestDistance = distance;
-            closestLocation = loc;
-        }
-    });
-
-    return closestLocation;
-}
 
 function toMeterString(meters) {
     return `${Math.round(meters)}m`;
@@ -145,6 +126,9 @@ function clearTableBody(){
     while (resTableBody.firstChild) {
         resTableBody.removeChild(resTableBody.firstChild);
     }
+
+    const myLocationHeader = document.getElementById('mylocation');
+    myLocationHeader.textContent = "Calculating my location...";
 }
 
 function fillResTableWithData(dataList){
@@ -193,6 +177,9 @@ function fillTable(){
                 
                 fillTableImpl(userLat, userLng);
                 document.getElementById('status').style.display = 'none';
+
+                const myLocationHeader = document.getElementById('mylocation');
+                myLocationHeader.textContent = `My Location: Latitude ${userLat}, Longitude ${userLng}`;
             },
             function(error) {
                 document.getElementById('status').innerHTML = 
