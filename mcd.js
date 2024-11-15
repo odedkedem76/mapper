@@ -195,8 +195,15 @@ function fillTable(){
 }
 
 function IsWatch(){
+    const defaultValue = true;
     const urlParams = new URLSearchParams(window.location.search);
-    const hasWatch = urlParams.has('watch');
+    const hasWatchParam = urlParams.get('watch');
+    let hasWatch;
+    try {
+        hasWatch = hasWatchParam === null ? defaultValue : JSON.parse(hasWatchParam);
+    } catch (e) {
+        hasWatch = defaultValue;
+    }
     console.log(hasWatch);
     return hasWatch;
 }
