@@ -203,6 +203,10 @@ function IsWatch(){
 
 function RefreshTable(){
     console.log('RefreshTable');
+    if(IsWatch){
+        console.log('watch - no refresh');
+        return;
+    }
     fillTable();
 }
 
@@ -215,7 +219,7 @@ function StartWatch(){
                 document.getElementById('status').innerHTML = 
                     `<div class="error">Error getting location: ${error.message}</div>`;
             },
-             { enableHighAccuracy: true, maximumAge: 2000, timeout: 5000 }
+             { enableHighAccuracy: true, maximumAge: 2000, timeout: 1000 }
         );
     } else {
         document.getElementById('status').innerHTML = 
