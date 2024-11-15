@@ -165,22 +165,24 @@ function fillTableImpl(userLat, userLng){
     fillResTableWithData(dataList);
 }
 
+function HandlePosition(position) {
+    const userLat = position.coords.latitude;
+    const userLng = position.coords.longitude;
+    
+    fillTableImpl(userLat, userLng);
+    document.getElementById('status').style.display = 'none';
+
+    const myLocationHeader = document.getElementById('mylocation');
+    myLocationHeader.textContent = `My Location: Latitude ${userLat}, Longitude ${userLng}`;
+}
+
 function fillTable(){
     console.log('fillTable');
     document.getElementById('status').style.display = 'block';
     clearTableBody();
     if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
-            function(position) {
-                const userLat = position.coords.latitude;
-                const userLng = position.coords.longitude;
-                
-                fillTableImpl(userLat, userLng);
-                document.getElementById('status').style.display = 'none';
-
-                const myLocationHeader = document.getElementById('mylocation');
-                myLocationHeader.textContent = `My Location: Latitude ${userLat}, Longitude ${userLng}`;
-            },
+            HandlePosition,
             function(error) {
                 document.getElementById('status').innerHTML = 
                     `<div class="error">Error getting location: ${error.message}</div>`;
@@ -190,5 +192,45 @@ function fillTable(){
         document.getElementById('status').innerHTML = 
             '<div class="error">Geolocation is not supported by your browser</div>';
     }    
+}
+
+function IsWatch(){
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasWatch = urlParams.has('watch');
+    console.log(hasWatch);
+    return hasWatch;
+}
+
+function RefreshTable(){
+    console.log('RefreshTable');
+    fillTable();
+}
+
+function StartWatch(){
+    console.log('StartWatch');
+    if ("geolocation" in navigator) {
+        navigator.geolocation.watchPosition(
+            HandlePosition,
+            function(error) {
+                document.getElementById('status').innerHTML = 
+                    `<div class="error">Error getting location: ${error.message}</div>`;
+            },
+             { enableHighAccuracy: true, maximumAge: 2000, timeout: 5000 }
+        );
+    } else {
+        document.getElementById('status').innerHTML = 
+            '<div class="error">Geolocation is not supported by your browser</div>';
+    }   
+}
+
+function InitializeStuff(){
+    console.log('InitializeStuff');
+    if (IsWatch()){
+        console.log('watch');
+        StartWatch();
+    }else{
+        console.log('no watch');
+        fillTable();
+    }
     
 }
