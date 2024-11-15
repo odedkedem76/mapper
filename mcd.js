@@ -239,6 +239,7 @@ function InitializeStuff(){
     if (IsWatch()){
         console.log('watch');
         StartWatch();
+        document.getElementById('refreshButton').style.display = 'none';
     }else{
         console.log('no watch');
         fillTable();
