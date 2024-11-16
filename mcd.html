@@ -23,12 +23,14 @@
             margin-top: 20px;
         }
     </style>
+    <link rel="stylesheet" href="loadmodal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 </head>
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="mcd.js"></script>
+    
     
     <h1>בניינים קרובים אלי</h1>
     <div id="status">Checking your location...</div>
@@ -47,9 +49,18 @@
             </tbody>
         </table>
     </div>
-    <button id="load" onclick="loadTable()">Load</button>
+    <button id="load" onclick="OpenModal()">Load</button>
     <button id="show" onclick="showLocations()">Show</button>
     <h2 id="mylocation">Calculating my location...</h2>
+    <dialog id="modal" style="width: 90vw; max-width: none;">
+        <button class="close-button" onclick="CloseModal()">Close</button>
+        <div class="modal-content" id="modalcontent">
+            <div class="input-group">
+                <textarea id="urlDownloadInput" placeholder="http://example.com/file.csv" style="width: 100%; height: 3em;"></textarea>
+                <button onclick="DownloadClicked()">Download</button>
+            </div>
+        </div>
+    </dialog>
 
     <script>
         InitializeStuff();

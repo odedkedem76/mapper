@@ -35,6 +35,19 @@ function getLocations() {
     return locations;
 }
 
+function parseAndStoreLocations(csvData) {
+    const data = Papa.parse(csvData, { header: true });
+    const locations = data.data.map(row => {
+        return {
+            title: row.title,
+            location: parseCoordinates(row.geolocation),
+            code: row.code
+        };
+    });
+    console.log(locations);
+    localStorage.setItem('locations', JSON.stringify(locations));
+}
+
 function loadTable(){
     const input = document.createElement('input');
     input.type = 'file';
@@ -44,21 +57,49 @@ function loadTable(){
         const reader = new FileReader();
         reader.onload = (e) => {
             const csvData = e.target.result;
-            // Papa is now globally available, no require needed
-            const data = Papa.parse(csvData, { header: true });
-            const locations = data.data.map(row => {
-                return {
-                    title: row.title,
-                    location: parseCoordinates(row.geolocation),
-                    code: row.code
-                };
-            });
-            console.log(locations);
-            localStorage.setItem('locations', JSON.stringify(locations));
+            parseAndStoreLocations(csvData)
         };
         reader.readAsText(file);
     });
     input.click();
+}
+
+function httpGetCSVXHR(url) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                const csvText = xhr.responseText;
+                resolve(csvText);
+            } else {
+                reject(new Error(`HTTP error! status: ${xhr.status}`));
+            }
+        };
+        
+        xhr.onerror = function() {
+            reject(new Error('Network error'));
+        };
+        
+        xhr.send();
+    });
+}
+
+function DowloadLocations(url){
+
+    console.log("downloading from " + url);
+    httpGetCSVXHR(url).then(data => {
+        console.log(data);
+        parseAndStoreLocations(data);
+        alert("Successfully downloaded from " + url);
+        CloseModal();
+    }).catch(error => {
+        console.error(error);
+        alert("error downloading fron " + url + ": " + error);
+        CloseModal();
+    });
+    
 }
 
 function showLocations() {
@@ -234,6 +275,7 @@ function StartWatch(){
     }   
 }
 
+
 function InitializeStuff(){
     console.log('InitializeStuff');
     if (IsWatch()){
@@ -244,5 +286,42 @@ function InitializeStuff(){
         console.log('no watch');
         fillTable();
     }
-    
+}
+
+function CloseModal() {
+    document.getElementById('modal').close();
+}
+
+
+
+function OpenModal() {
+    modal = document.getElementById('modal');
+    document.getElementById('modal').showModal();
+
+    // Close modal when clicking outside
+    if (!modal.hasAttribute('data-listened')) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                CloseModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.open) {
+                CloseModal();
+            }
+        });
+        modal.setAttribute('data-listened', '');
+    } 
+}
+
+function DownloadClicked() {
+    const url = document.getElementById('urlDownloadInput').value;
+    if (url) {
+        console.log(`Downloading file from URL: ${url}`);
+        DowloadLocations(url);
+    } else {
+        alert("No URL provided.");
+    }
 }
