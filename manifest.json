@@ -1,0 +1,14 @@
+{
+    "name": "mapper",
+    "short_name": "mapper",
+    "icons": [
+      {
+        "src": "icon.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      }
+    ],
+    "start_url": "mcd.html",
+    "display": "standalone"
+  }
+  
